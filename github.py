@@ -1,25 +1,33 @@
 import os
-import datetime
-print("\x1B[9m \x1B[40m \x1B[32m")
-os.system("git remote remove upstream")
+import subprocess
+from datetime import datetime, timedelta
 
-def fileing(i):
-    with open("Readme.md","w") as file:
-       file.write("\n ## Hack Github Commit- Sahil Agiwal\n {} \n".format(i))
-       file.close()
+# Calculate date range from a year ago to today
+end_date = datetime.now()
+start_date = end_date - timedelta(days=365)
 
-def load():
-    start_date = datetime.date(2022, 1, 1)
-    end_date = datetime.date(2023, 12, 1)
-    delta = datetime.timedelta(days=1)
-    while (start_date <= end_date):
-        start_date +=delta
-        mydate = start_date.strftime('%a %d %b %Y')
-        print(mydate) 
-        fileing(mydate)
-        os.system("git add .")
-        os.system("git commit --date=\"{} 10:00 2022 +0500\" -m hack-git-commit".format(mydate))
+# Function to create a new file and commit it
+def make_commit(date):
+    filename = f"commit_file_{date.strftime('%Y%m%d')}.txt"
+    
+    # Create a new file
+    with open(filename, "w") as file:
+        file.write(f"This is a commit for {date.strftime('%Y-%m-%d')}")
 
-load()
+    # Add the file
+    subprocess.run(["git", "add", filename])
 
-os.system("git push -f origin master")
+    # Commit with a custom date
+    env = os.environ.copy()
+    env["GIT_COMMITTER_DATE"] = date.strftime("%Y-%m-%dT%H:%M:%S")
+    env["GIT_AUTHOR_DATE"] = date.strftime("%Y-%m-%dT%H:%M:%S")
+    subprocess.run(["git", "commit", "-m", f"Commit for {date.strftime('%Y-%m-%d')}"], env=env)
+
+# Make a commit for each day
+date = start_date
+while date < end_date:
+    make_commit(date)
+    date += timedelta(days=1)
+
+# Push the commits
+subprocess.run(["git", "push"])
